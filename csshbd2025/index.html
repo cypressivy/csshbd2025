@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>csshbd2025</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <h1>csshbd2025</h1>
+    <p class="sub">胆大包天的你将手伸向了它...</p>
+
+    <div class="stage">
+      <img id="bucket" src="assets/bucket.png" alt="抽签桶" />
+      <button id="shakeBtn" class="btn">摇一摇！会是什么呢</button>
+    </div>
+
+    <footer>
+      <small>© 2025 • 生日抽签 • 祝你好运++</small>
+    </footer>
+  </main>
+
+  <!-- 结果弹窗 -->
+  <dialog id="resultDlg">
+    <div class="dlg-wrap">
+      <img id="resultImg" alt="抽到的祝福卡" />
+      <form method="dialog">
+        <button class="btn close">不满意！再来一次</button>
+      </form>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
