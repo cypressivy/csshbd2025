@@ -21,9 +21,11 @@
     </footer>
   </main>
 
+  <!-- 结果弹窗 -->
   <dialog id="resultDlg">
     <div class="dlg-wrap">
-      <img id="resultImg" alt="抽到的祝福卡" />
+      <!-- 我们用容器而不是固定 img，避免旧图短暂残留 -->
+      <div id="imgWrap" class="img-wrap" aria-live="polite"></div>
       <form method="dialog">
         <button class="btn close">不满意！再来一次</button>
       </form>

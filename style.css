@@ -17,7 +17,17 @@ h1{ font-size:24px; margin:10px 0; }
 }
 #resultDlg{ border:none; border-radius:14px; padding:0; }
 .dlg-wrap{ padding:10px 10px 16px; background:#fff; border-radius:14px; }
-#resultImg{ width:min(90vw,520px); display:block; }
+.img-wrap{
+  width:min(90vw,520px);
+  min-height:200px; /* 占位防跳动 */
+  margin:0 auto;
+  display:flex; align-items:center; justify-content:center;
+}
+.img-wrap img{
+  width:100%; height:auto; border-radius:12px;
+  opacity:0; transition:opacity .12s ease; /* 平滑显现 */
+}
+.img-wrap img.ready{ opacity:1; }
 .close{ margin-top:10px; }
 .shake{ animation:shake .5s ease; }
 @keyframes shake{
