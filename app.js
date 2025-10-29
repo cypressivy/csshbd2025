@@ -55,24 +55,18 @@ function setThemeFromImage(imgEl){
     const mix = (c)=> Math.round(0.55*255 + 0.45*c); // 更偏暖亮
     const pr=mix(r), pg=mix(g), pb=mix(b);
 
-    // 计算相对亮度选择字色（黑或白）
-    const sr = pr/255, sg = pg/255, sb = pb/255;
-    const lum = 0.2126*sr + 0.7152*sg + 0.0722*sb;
-    const textDark = lum > 0.6 ? '#222' : '#fff';
-    const btnText = lum > 0.65 ? '#222' : '#fff';
+   // 计算相对亮度选择字色（黑或白）
+const sr = pr/255, sg = pg/255, sb = pb/255;
+const lum = 0.2126*sr + 0.7152*sg + 0.0722*sb;
+const textDark = lum > 0.6 ? '#222' : '#fff';
 
-    document.documentElement.style.setProperty('--bg', `rgb(${pr},${pg},${pb})`);
-    document.documentElement.style.setProperty('--btn', `rgb(${pr-20},${pg-10},${pb-10})`);
-    document.documentElement.style.setProperty('--ink', textDark);
-    document.documentElement.style.setProperty('--dlg-bg', `rgba(${pr},${pg},${pb},0.97)`);
-    document.documentElement.style.setProperty('--dlg-ink', textDark);
-    // 按钮字色
-    document.querySelectorAll('.btn').forEach(b=> b.style.color = btnText);
-  }catch(e){
-    // 失败则忽略，用默认主题
-    console.warn('Theme compute failed:', e);
-  }
-}
+// ✅ 只改变弹窗里的按钮（.close）的背景与文字颜色
+const btnBg = `rgb(${pr-20},${pg-10},${pb-10})`;
+document.querySelectorAll('.close').forEach(b => {
+  b.style.background = btnBg;
+  b.style.color = textDark;
+});
+
 
 // --- 抽卡逻辑 ---
 function draw(){
