@@ -24,13 +24,15 @@
   <!-- 结果弹窗 -->
   <dialog id="resultDlg">
     <div class="dlg-wrap">
-      <!-- 我们用容器而不是固定 img，避免旧图短暂残留 -->
       <div id="imgWrap" class="img-wrap" aria-live="polite"></div>
       <form method="dialog">
         <button class="btn close">不满意！再来一次</button>
       </form>
     </div>
   </dialog>
+
+  <!-- 彩带画布 -->
+  <canvas id="confetti"></canvas>
 
   <script src="app.js"></script>
 </body>

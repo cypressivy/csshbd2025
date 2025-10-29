@@ -10,7 +10,7 @@ const shakeBtn = document.getElementById('shakeBtn');
 const dlg      = document.getElementById('resultDlg');
 const imgWrap  = document.getElementById('imgWrap');
 
-// —— 预加载，避免切换卡顿 —— //
+// —— 预加载 —— //
 const ALL_SRCS = [HIDDEN, ...REGULARS];
 const IMG_CACHE = new Map();
 function preloadAll(){
@@ -18,7 +18,7 @@ function preloadAll(){
     const im = new Image();
     im.src = src;
     im.onload = () => { IMG_CACHE.set(src, im); resolve(); };
-    im.onerror= () => { IMG_CACHE.set(src, im); resolve(); }; // 出错也不阻塞
+    im.onerror= () => { IMG_CACHE.set(src, im); resolve(); };
   })));
 }
 preloadAll();
@@ -39,8 +39,57 @@ function themeButtonFrom(img){
   document.querySelectorAll('.close').forEach(btn=>{ btn.style.background=btnBg; btn.style.color=text; });
 }
 
-// —— 无闪烁抽卡：先解码、再换 DOM、再开窗 —— //
-async function loadImageDecoded(src){
+// —— 彩带（canvas） —— //
+(function(){
+  const cvs = document.getElementById('confetti');
+  const c = cvs.getContext('2d');
+  let W=0,H=0, raf=null, parts=[];
+  function resize(){ W=cvs.width=window.innerWidth; H=cvs.height=window.innerHeight; }
+  window.addEventListener('resize', resize); resize();
+  function rnd(a,b){ return a + Math.random()*(b-a); }
+  function spawn(n=140){
+    parts.length=0;
+    for(let i=0;i<n;i++){
+      const ang = rnd(-Math.PI, Math.PI);
+      const spd = rnd(3,8);
+      parts.push({
+        x: W/2, y: H*0.35,
+        vx: Math.cos(ang)*spd,
+        vy: Math.sin(ang)*spd - 2,
+        g: rnd(0.05,0.12),
+        rot: rnd(0,Math.PI*2),
+        vr: rnd(-0.2,0.2),
+        w: rnd(6,12),
+        h: rnd(8,16),
+        color: `hsl(${Math.floor(rnd(0,360))} 90% 55%)`,
+        life: 60 + Math.random()*30
+      });
+    }
+    if(!raf) tick();
+  }
+  function tick(){
+    raf = requestAnimationFrame(tick);
+    c.clearRect(0,0,W,H);
+    let alive=0;
+    for(const p of parts){
+      p.vy += p.g;
+      p.x  += p.vx;
+      p.y  += p.vy;
+      p.rot+= p.vr;
+      p.life -= 1;
+      if(p.life>0 && p.y < H+50){
+        alive++;
+        c.save(); c.translate(p.x,p.y); c.rotate(p.rot);
+        c.fillStyle=p.color; c.fillRect(-p.w/2,-p.h/2,p.w,p.h); c.restore();
+      }
+    }
+    if(alive===0){ cancelAnimationFrame(raf); raf=null; c.clearRect(0,0,W,H); }
+  }
+  window.shootConfetti = ()=> spawn(140);
+})();
+
+// —— 加载并 decode 图片 —— //
+async function loadDecoded(src){
   let im = IMG_CACHE.get(src);
   if(!im){ im = new Image(); im.src = src; IMG_CACHE.set(src, im); }
   if(!im.complete){
@@ -50,36 +99,52 @@ async function loadImageDecoded(src){
   return im;
 }
 
+// —— 等待摇动动画结束（更稳比 setTimeout） —— //
+function waitForShake(el, timeout = 1200){
+  return new Promise(resolve => {
+    let done = false;
+    const finish = () => { if (!done){ done = true; el.removeEventListener('animationend', finish); resolve(); } };
+    el.addEventListener('animationend', finish, { once: true });
+    setTimeout(finish, timeout); // 兜底
+  });
+}
+
 async function draw(){
   if(roundQueue.length===0) makeNewRound();
 
-  // 防止连点 + 摇动动画
+  // 禁止连点，开始摇动
   shakeBtn.disabled = true;
   bucket.classList.remove('shake'); void bucket.offsetWidth; bucket.classList.add('shake');
 
+  // 抽签 & 并行加载图片 + 等摇动结束
   const pick = roundQueue.shift();
+  const decodedPromise = loadDecoded(pick);
+  const shakePromise   = waitForShake(bucket);
 
-  // 先解码新图（内存就绪）
-  const decoded = await loadImageDecoded(pick);
+  // 两者完成后再展示
+  const decoded = await Promise.all([decodedPromise, shakePromise]).then(r => r[0]);
 
-  // 替换容器里的 <img>，避免旧图残留
+  // 替换容器中的图片元素，避免旧图残影
   imgWrap.innerHTML = "";
   const img = document.createElement('img');
   img.alt = "抽到的祝福卡";
   img.loading = "eager";
-  img.decoding = "sync"; // 直接显示已解码像素
-  img.src = decoded.src; // 复用缓存地址
+  img.decoding = "sync";
+  img.src = decoded.src;
   imgWrap.appendChild(img);
 
-  // 设置按钮主题色
+  // 只改变弹窗按钮颜色
   themeButtonFrom(decoded);
 
-  // 先开窗，再在下一帧显示图，避免布局闪动
+  // 展示弹窗 & 在下一帧渐显图片
   dlg.showModal();
   requestAnimationFrame(()=> { img.classList.add('ready'); });
 
-  // 放开按钮
-  setTimeout(()=> { shakeBtn.disabled = false; }, 400);
+  // 仅隐藏款触发彩带
+  if(pick === HIDDEN){ shootConfetti(); }
+
+  // 释放按钮
+  setTimeout(()=> { shakeBtn.disabled = false; }, 200);
 }
 
 shakeBtn.addEventListener('click', draw);
